@@ -1,0 +1,88 @@
+import yfinance as yf
+import pandas as pd
+import time
+
+# A highly diverse list representing major sectors across NSE & BSE
+# You can expand this array with any tickers you wish to target
+tickers = [
+    "RELIANCE.NS", "TCS.NS", "HDFCBANK.NS", "BHARTIARTL.NS", "INFY.NS", 
+    "ICICIBANK.NS", "SBIN.NS", "LTIM.NS", "ITC.NS", "TATAMOTORS.NS",
+    "500325.BO", "500180.BO", "532215.BO", "532540.BO" # BSE Codes (.BO)
+]
+
+all_data = []
+
+print(f"Starting financial data aggregation for {len(tickers)} companies...\n")
+
+for idx, ticker in enumerate(tickers, 1):
+    print(f"[{idx}/{len(tickers)}] Fetching data for: {ticker}")
+    try:
+        stock = yf.Ticker(ticker)
+        info = stock.info
+        
+        # 1. Company Identity Info
+        company_name = info.get('longName', 'N/A')
+        sector = info.get('sector', 'N/A')
+        industry = info.get('industry', 'N/A')
+        summary = info.get('longBusinessSummary', 'N/A')[:150] + "..." # Truncated summary
+        
+        # 2. Key Valuation Metrics
+        market_cap = info.get('marketCap', 'N/A')
+        current_price = info.get('currentPrice', info.get('regularMarketPrice', 'N/A'))
+        pe_ratio = info.get('trailingPE', 'N/A')
+        pb_ratio = info.get('priceToBook', 'N/A')
+        dividend_yield = info.get('dividendYield', 'N/A')
+        
+        # 3. Income Statement Metrics
+        total_revenue = info.get('totalRevenue', 'N/A')
+        net_income = info.get('netIncomeToCommon', 'N/A')
+        ebitda = info.get('ebitda', 'N/A')
+        eps = info.get('trailingEps', 'N/A')
+        revenue_growth = info.get('revenueGrowth', 'N/A')
+        
+        # 4. Financial Health & Balance Sheet Metrics
+        book_value = info.get('bookValue', 'N/A')
+        total_debt = info.get('totalDebt', 'N/A')
+        debt_to_equity = info.get('debtToEquity', 'N/A')
+        free_cashflow = info.get('freeCashflow', 'N/A')
+        roe = info.get('returnOnEquity', 'N/A')
+        roa = info.get('returnOnAssets', 'N/A')
+
+        # Map clean structural dictionary 
+        all_data.append({
+            "Ticker": ticker,
+            "Company Name": company_name,
+            "Sector": sector,
+            "Industry": industry,
+            "Current Price (₹)": current_price,
+            "Market Cap (₹)": market_cap,
+            "P/E Ratio": pe_ratio,
+            "P/B Ratio": pb_ratio,
+            "Dividend Yield (%)": dividend_yield * 100 if isinstance(dividend_yield, float) else 'N/A',
+            "EPS": eps,
+            "Total Revenue (₹)": total_revenue,
+            "Net Income (Profit) (₹)": net_income,
+            "EBITDA (₹)": ebitda,
+            "Revenue Growth (%)": revenue_growth * 100 if isinstance(revenue_growth, float) else 'N/A',
+            "Book Value Per Share": book_value,
+            "Total Debt (₹)": total_debt,
+            "Debt-to-Equity Ratio": debt_to_equity,
+            "Free Cash Flow (₹)": free_cashflow,
+            "Return on Equity (ROE %)": roe * 100 if isinstance(roe, float) else 'N/A',
+            "Return on Assets (ROA %)": roa * 100 if isinstance(roa, float) else 'N/A',
+            "Business Summary": summary
+        })
+        
+        # Polite delay to ensure Yahoo doesn't rate limit or block the GitHub runner
+        time.sleep(1.5)
+        
+    except Exception as e:
+        print(f"⚠️ Error pulling comprehensive data for {ticker}: {e}")
+
+# Compile collected dictionary profiles into tabular structures
+df = pd.DataFrame(all_data)
+
+# Export structural matrix cleanly to Excel workbook sheets
+excel_filename = "indian_stocks_financial_master.xlsx"
+df.to_excel(excel_filename, index=False)
+print(f"\n All compilation processes finalized. Saved data as '{excel_filename}'")
