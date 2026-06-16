@@ -11,6 +11,11 @@ jobs:
           python-version: '3.x'
       - name: Install dependencies
         run: |
-          pip install yfinance pandas
+          pip install yfinance pandas openpyxl
       - name: Run Script
         run: python script.py
+      - name: Save Excel Report to GitHub
+        uses: actions/upload-artifact@v4
+        with:
+          name: stock-financials-sheet
+          path: indian_stocks_financial_master.xlsx
